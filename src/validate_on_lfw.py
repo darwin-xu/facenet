@@ -4,19 +4,19 @@ is calculated and plotted. Both the model metagraph and the model parameters nee
 in the same directory, and the metagraph should have the extension '.meta'.
 """
 # MIT License
-# 
+#
 # Copyright (c) 2016 David Sandberg
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -41,30 +41,53 @@ from sklearn import metrics
 from scipy.optimize import brentq
 from scipy import interpolate
 
-def main(args):
-  
-    with tf.Graph().as_default():
-      
-        with tf.Session() as sess:
-            
-            # Read the file containing the pairs used for testing
-            pairs = lfw.read_pairs(os.path.expanduser(args.lfw_pairs))
+def getImages(path):
+    files = [os.path.join(path, file) for file in os.listdir(path) if os.path.isfile(os.path.join(path, file))]
+    dirs = [dir for dir in os.listdir(path) if os.path.isdir(os.path.join(path, dir))]
+    for dir in dirs:
+        files += getImages(os.path.join(path, dir))
+    return files
 
-            # Get the paths for the corresponding images
-            paths, actual_issame = lfw.get_paths(os.path.expanduser(args.lfw_dir), pairs)
+def isTheSame(image1, image2):
+    return os.path.basename(os.path.dirname(image1)) == os.path.basename(os.path.dirname(image2))
+
+def crossFire(images):
+    path_list = []
+    issame_list = []
+    for i in range(len(images) - 1):
+        for j in range(i + 1, len(images)):
+            path_list += (images[i], images[j])
+            issame_list.append(isTheSame(images[i], images[j]))
+    return path_list, issame_list
+
+def main(args):
+
+    with tf.Graph().as_default():
+
+        with tf.Session() as sess:
+
+            # Read the file containing the pairs used for testing
+            if args.lfw_pairs == None:
+                paths, actual_issame = crossFire(getImages(os.path.expanduser(args.lfw_dir)))
+                print(len(actual_issame), " pairs to be checked.")
+            else:
+                pairs = lfw.read_pairs(os.path.expanduser(args.lfw_pairs))
+
+                # Get the paths for the corresponding images
+                paths, actual_issame = lfw.get_paths(os.path.expanduser(args.lfw_dir), pairs)
 
             # Load the model
             facenet.load_model(args.model)
-            
+
             # Get input and output tensors
             images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
             embeddings = tf.get_default_graph().get_tensor_by_name("embeddings:0")
             phase_train_placeholder = tf.get_default_graph().get_tensor_by_name("phase_train:0")
-            
+
             #image_size = images_placeholder.get_shape()[1]  # For some reason this doesn't work for frozen graphs
             image_size = args.image_size
             embedding_size = embeddings.get_shape()[1]
-        
+
             # Run forward pass to calculate embeddings
             print('Runnning forward pass on LFW images')
             batch_size = args.lfw_batch_size
@@ -78,8 +101,8 @@ def main(args):
                 images = facenet.load_data(paths_batch, False, False, image_size)
                 feed_dict = { images_placeholder:images, phase_train_placeholder:False }
                 emb_array[start_index:end_index,:] = sess.run(embeddings, feed_dict=feed_dict)
-        
-            tpr, fpr, accuracy, val, val_std, far = lfw.evaluate(emb_array, 
+
+            tpr, fpr, accuracy, val, val_std, far = lfw.evaluate(emb_array,
                 actual_issame, nrof_folds=args.lfw_nrof_folds)
 
             print('Accuracy: %1.3f+-%1.3f' % (np.mean(accuracy), np.std(accuracy)))
@@ -89,20 +112,20 @@ def main(args):
             print('Area Under Curve (AUC): %1.3f' % auc)
             eer = brentq(lambda x: 1. - x - interpolate.interp1d(fpr, tpr)(x), 0., 1.)
             print('Equal Error Rate (EER): %1.3f' % eer)
-            
+
 def parse_arguments(argv):
     parser = argparse.ArgumentParser()
-    
+
     parser.add_argument('lfw_dir', type=str,
         help='Path to the data directory containing aligned LFW face patches.')
     parser.add_argument('--lfw_batch_size', type=int,
         help='Number of images to process in a batch in the LFW test set.', default=100)
-    parser.add_argument('model', type=str, 
+    parser.add_argument('model', type=str,
         help='Could be either a directory containing the meta_file and ckpt_file or a model protobuf (.pb) file')
     parser.add_argument('--image_size', type=int,
         help='Image size (height, width) in pixels.', default=160)
     parser.add_argument('--lfw_pairs', type=str,
-        help='The file containing the pairs to use for validation.', default='data/pairs.txt')
+        help='The file containing the pairs to use for validation.')#, default='data/pairs.txt')
     parser.add_argument('--lfw_nrof_folds', type=int,
         help='Number of folds to use for cross validation. Mainly used for testing.', default=10)
     return parser.parse_args(argv)
