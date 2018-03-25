@@ -69,12 +69,13 @@ def main(args):
             # Read the file containing the pairs used for testing
             if args.lfw_pairs == None:
                 paths, actual_issame = crossFire(getImages(os.path.expanduser(args.lfw_dir)))
-                print(len(actual_issame), " pairs to be checked.")
+                print("Crossfire check:", len(actual_issame), "pairs to be checked.")
             else:
                 pairs = lfw.read_pairs(os.path.expanduser(args.lfw_pairs))
 
                 # Get the paths for the corresponding images
                 paths, actual_issame = lfw.get_paths(os.path.expanduser(args.lfw_dir), pairs)
+                print("Pair file check:", len(actual_issame), "pairs to be checked.")
 
             # Load the model
             facenet.load_model(args.model)
@@ -102,10 +103,11 @@ def main(args):
                 feed_dict = { images_placeholder:images, phase_train_placeholder:False }
                 emb_array[start_index:end_index,:] = sess.run(embeddings, feed_dict=feed_dict)
 
-            tpr, fpr, accuracy, val, val_std, far = lfw.evaluate(emb_array,
+            tpr, fpr, accuracy, threshold, val, val_std, far = lfw.evaluate(emb_array,
                 actual_issame, nrof_folds=args.lfw_nrof_folds)
 
             print('Accuracy: %1.3f+-%1.3f' % (np.mean(accuracy), np.std(accuracy)))
+            print('Best threshold: %1.3f' % threshold)
             print('Validation rate: %2.5f+-%2.5f @ FAR=%2.5f' % (val, val_std, far))
 
             auc = metrics.auc(fpr, tpr)

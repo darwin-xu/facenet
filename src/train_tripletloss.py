@@ -263,8 +263,9 @@ def train(args, sess, dataset, epoch, image_paths_placeholder, labels_placeholde
             
         # Add validation loss and accuracy to summary
         #pylint: disable=maybe-no-member
-        summary.value.add(tag='time/selection', simple_value=selection_time)
-        summary_writer.add_summary(summary, step)
+        if nrof_batches > 0:
+            summary.value.add(tag='time/selection', simple_value=selection_time)
+            summary_writer.add_summary(summary, step)
     return step
   
 def select_triplets(embeddings, nrof_images_per_class, image_paths, people_per_batch, alpha):
@@ -274,7 +275,7 @@ def select_triplets(embeddings, nrof_images_per_class, image_paths, people_per_b
     emb_start_idx = 0
     num_trips = 0
     triplets = []
-    
+
     # VGG Face: Choosing good triplets is crucial and should strike a balance between
     #  selecting informative (i.e. challenging) examples and swamping training with examples that
     #  are too hard. This is achieve by extending each pair (a, p) to a triplet (a, p, n) by sampling
@@ -298,8 +299,8 @@ def select_triplets(embeddings, nrof_images_per_class, image_paths, people_per_b
                     rnd_idx = np.random.randint(nrof_random_negs)
                     n_idx = all_neg[rnd_idx]
                     triplets.append((image_paths[a_idx], image_paths[p_idx], image_paths[n_idx]))
-                    #print('Triplet %d: (%d, %d, %d), pos_dist=%2.6f, neg_dist=%2.6f (%d, %d, %d, %d, %d)' % 
-                    #    (trip_idx, a_idx, p_idx, n_idx, pos_dist_sqr, neg_dists_sqr[n_idx], nrof_random_negs, rnd_idx, i, j, emb_start_idx))
+                    # print('      Triplet %d: (%d, %d, %d), pos_dist=%2.6f, neg_dist=%2.6f (%d, %d, %d, %d, %d)' % 
+                    #     (trip_idx, a_idx, p_idx, n_idx, pos_dist_sqr, neg_dists_sqr[n_idx], nrof_random_negs, rnd_idx, i, j, emb_start_idx))
                     trip_idx += 1
 
                 num_trips += 1
@@ -362,7 +363,7 @@ def evaluate(sess, image_paths, embeddings, labels_batch, image_paths_placeholde
     
     assert(np.all(label_check_array==1))
     
-    _, _, accuracy, val, val_std, far = lfw.evaluate(emb_array, actual_issame, nrof_folds=nrof_folds)
+    _, _, accuracy, _, val, val_std, far = lfw.evaluate(emb_array, actual_issame, nrof_folds=nrof_folds)
     
     print('Accuracy: %1.3f+-%1.3f' % (np.mean(accuracy), np.std(accuracy)))
     print('Validation rate: %2.5f+-%2.5f @ FAR=%2.5f' % (val, val_std, far))
