@@ -471,6 +471,8 @@ def calculate_roc(thresholds, embeddings1, embeddings2, actual_issame, nrof_fold
     
     indices = np.arange(nrof_pairs)
     
+    min_thresholds = []
+    max_thresholds = []
     best_thresholds = []
 
     for fold_idx, (train_set, test_set) in enumerate(k_fold.split(indices)):
@@ -481,18 +483,28 @@ def calculate_roc(thresholds, embeddings1, embeddings2, actual_issame, nrof_fold
         dist = distance(embeddings1-mean, embeddings2-mean, distance_metric)
         
         # Find the best threshold for the fold
+        tpr_train = np.zeros((nrof_thresholds))
+        fpr_train = np.zeros((nrof_thresholds))
         acc_train = np.zeros((nrof_thresholds))
         for threshold_idx, threshold in enumerate(thresholds):
-            _, _, acc_train[threshold_idx] = calculate_accuracy(threshold, dist[train_set], actual_issame[train_set])
+            tpr_train[threshold_idx], fpr_train[threshold_idx], acc_train[threshold_idx] = calculate_accuracy(threshold, dist[train_set], actual_issame[train_set])
+
+        min_HitRate1_idx = [n for n, i in enumerate(tpr_train) if i >= 1][0]
+        min_thresholds.append(thresholds[min_HitRate1_idx])
+
+        max_FalseAlarmRate0_idx = [n for n, i in enumerate(fpr_train) if i <= 0][0]
+        max_thresholds.append(thresholds[max_FalseAlarmRate0_idx])
+
         best_threshold_index = np.argmax(acc_train)
+        best_thresholds.append(thresholds[best_threshold_index])
+
         for threshold_idx, threshold in enumerate(thresholds):
             tprs[fold_idx,threshold_idx], fprs[fold_idx,threshold_idx], _ = calculate_accuracy(threshold, dist[test_set], actual_issame[test_set])
         _, _, accuracy[fold_idx] = calculate_accuracy(thresholds[best_threshold_index], dist[test_set], actual_issame[test_set])
-        best_thresholds.append(thresholds[best_threshold_index])
 
         tpr = np.mean(tprs,0)
         fpr = np.mean(fprs,0)
-    return tpr, fpr, accuracy, np.mean(best_thresholds)
+    return tpr, fpr, accuracy, np.mean(best_thresholds), np.mean(min_thresholds), np.mean(max_thresholds)
 
 def calculate_accuracy(threshold, dist, actual_issame):
     predict_issame = np.less(dist, threshold)
