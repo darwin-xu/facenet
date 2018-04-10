@@ -490,11 +490,10 @@ def calculate_roc(thresholds, embeddings1, embeddings2, actual_issame, nrof_fold
             tpr_train[threshold_idx], fpr_train[threshold_idx], acc_train[threshold_idx] = calculate_accuracy(threshold, dist[train_set], actual_issame[train_set])
 
         min_HitRate1_idx = np.searchsorted(tpr_train, 1)
-        min_thresholds.append(thresholds[-1] if min_HitRate1_idx > len(thresholds) else thresholds[min_HitRate1_idx])
+        min_thresholds.append(thresholds[-1] if min_HitRate1_idx >= len(thresholds) else thresholds[min_HitRate1_idx])
 
-        # fpr_train is usually descending
-        max_FalseAlarmRate0_idx = len(fpr_train) - 1 - np.searchsorted(fpr_train[::-1], 0)
-        max_thresholds.append(thresholds[-1] if max_FalseAlarmRate0_idx > len(thresholds) else thresholds[max_FalseAlarmRate0_idx])
+        max_FalseAlarmRate0_idx = np.searchsorted(fpr_train, 0, side='right')
+        max_thresholds.append(thresholds[-1] if max_FalseAlarmRate0_idx >= len(thresholds) else thresholds[max_FalseAlarmRate0_idx])
 
         best_threshold_index = np.argmax(acc_train)
         best_thresholds.append(thresholds[best_threshold_index])
