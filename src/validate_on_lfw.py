@@ -63,8 +63,8 @@ def crossFire(images):
 def main(args):
 
     with tf.Graph().as_default():
-
-        with tf.Session() as sess:
+        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=args.gpu_memory_fraction)
+        with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options, log_device_placement=False)) as sess:
 
             # Read the file containing the pairs used for testing
             if args.lfw_pairs == None:
@@ -153,6 +153,8 @@ def parse_arguments(argv):
         help='The file containing the pairs to use for validation.')#, default='data/pairs.txt')
     parser.add_argument('--lfw_nrof_folds', type=int,
         help='Number of folds to use for cross validation. Mainly used for testing.', default=10)
+    parser.add_argument('--gpu_memory_fraction', type=float,
+        help='Upper bound on the amount of GPU memory that will be used by the process.', default=1.0)
     return parser.parse_args(argv)
 
 if __name__ == '__main__':
