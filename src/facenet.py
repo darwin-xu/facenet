@@ -451,7 +451,7 @@ def distance(embeddings1, embeddings2, distance_metric=0):
         # Distance based on cosine similarity
         dot = np.sum(np.multiply(embeddings1, embeddings2), axis=1)
         norm = np.linalg.norm(embeddings1, axis=1) * np.linalg.norm(embeddings2, axis=1)
-        similarity = numpy.clip(dot / norm, -1, 1)
+        similarity = np.clip(dot / norm, -1, 1)
         dist = np.arccos(similarity) * 4 / math.pi
     else:
         raise 'Undefined distance metric %d' % distance_metric 
