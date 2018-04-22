@@ -40,6 +40,8 @@ import math
 from sklearn import metrics
 from scipy.optimize import brentq
 from scipy import interpolate
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 def getImages(path):
