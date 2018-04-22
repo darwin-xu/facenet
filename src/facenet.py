@@ -502,8 +502,8 @@ def calculate_roc(thresholds, embeddings1, embeddings2, actual_issame, nrof_fold
             tprs[fold_idx,threshold_idx], fprs[fold_idx,threshold_idx], _ = calculate_accuracy(threshold, dist[test_set], actual_issame[test_set])
         _, _, accuracy[fold_idx] = calculate_accuracy(thresholds[best_threshold_index], dist[test_set], actual_issame[test_set])
 
-        tpr = np.mean(tprs,0)
-        fpr = np.mean(fprs,0)
+        tpr = np.nanmean(tprs,0)
+        fpr = np.nanmean(fprs,0)
     return tpr, fpr, accuracy, np.mean(best_thresholds), np.mean(min_thresholds), np.mean(max_thresholds)
 
 def calculate_accuracy(threshold, dist, actual_issame):
@@ -513,8 +513,8 @@ def calculate_accuracy(threshold, dist, actual_issame):
     tn = np.sum(np.logical_and(np.logical_not(predict_issame), np.logical_not(actual_issame)))
     fn = np.sum(np.logical_and(np.logical_not(predict_issame), actual_issame))
 
-    tpr = 0 if (tp+fn==0) else float(tp) / float(tp+fn)
-    fpr = 0 if (fp+tn==0) else float(fp) / float(fp+tn)
+    tpr = np.nan if (tp+fn==0) else float(tp) / float(tp+fn)
+    fpr = np.nan if (fp+tn==0) else float(fp) / float(fp+tn)
     acc = float(tp+tn)/dist.size
     return tpr, fpr, acc
 
