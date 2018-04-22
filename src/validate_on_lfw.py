@@ -40,6 +40,7 @@ import math
 from sklearn import metrics
 from scipy.optimize import brentq
 from scipy import interpolate
+import matplotlib.pyplot as plt
 
 def getImages(path):
     files = [os.path.join(path, file) for file in os.listdir(path) if os.path.isfile(os.path.join(path, file))]
@@ -119,6 +120,9 @@ def main(args):
             print('Validation rate: %2.5f+-%2.5f @ FAR=%2.5f' % (val, val_std, far))
 
             auc = metrics.auc(fpr, tpr)
+            plt.clf()
+            plt.plot(fpr, tpr, '.')
+            plt.savefig('euclidian_distance_auc.jpg')
             print('Area Under Curve (AUC): %1.3f' % auc)
             eer = brentq(lambda x: 1. - x - interpolate.interp1d(fpr, tpr)(x), 0., 1.)
             print('Equal Error Rate (EER): %1.3f' % eer)
@@ -136,6 +140,9 @@ def main(args):
             print('Validation rate: %2.5f+-%2.5f @ FAR=%2.5f' % (val, val_std, far))
 
             auc = metrics.auc(fpr, tpr)
+            plt.clf()
+            plt.plot(fpr, tpr, '.')
+            plt.savefig('cosine_similarity_auc.jpg')
             print('Area Under Curve (AUC): %1.3f' % auc)
             eer = brentq(lambda x: 1. - x - interpolate.interp1d(fpr, tpr)(x), 0., 1.)
             print('Equal Error Rate (EER): %1.3f' % eer)
