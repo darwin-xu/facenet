@@ -529,7 +529,7 @@ def calculate_val(thresholds, embeddings1, embeddings2, actual_issame, far_targe
 
     val = np.zeros(nrof_folds)
     far = np.zeros(nrof_folds)
-    thresholds = np.zeros(nrof_folds)
+    thresholdsAtVal = np.zeros(nrof_folds)
     
     indices = np.arange(nrof_pairs)
 
@@ -547,17 +547,17 @@ def calculate_val(thresholds, embeddings1, embeddings2, actual_issame, far_targe
         if np.max(far_train)>=far_target:
             f = interpolate.interp1d(far_train, thresholds, kind='slinear')
             threshold = f(far_target)
-            thresholds[fold_idx] = threshold
+            thresholdsAtVal[fold_idx] = threshold
         else:
             threshold = 0.0
-            thresholds[fold_idx] = np.nan
+            thresholdsAtVal[fold_idx] = np.nan
 
         val[fold_idx], far[fold_idx] = calculate_val_far(threshold, dist[test_set], actual_issame[test_set])
 
     val_mean = np.mean(val)
     far_mean = np.mean(far)
     val_std = np.std(val)
-    return val_mean, val_std, far_mean, np.nanmean(thresholds)
+    return val_mean, val_std, far_mean, np.nanmean(thresholdsAtVal)
 
 
 def calculate_val_far(threshold, dist, actual_issame):
