@@ -109,42 +109,42 @@ def main(args):
             print()
             print('--- Evaluate ---')
 
-            tpr, fpr, accuracy, bestThreshold, minThreshold, maxThreshold, val, val_std, far = lfw.evaluate(emb_array,
+            tpr, fpr, accuracy, bestThreshold, minThreshold, maxThreshold, val, val_std, far, thresholdAtVal = lfw.evaluate(emb_array,
                 actual_issame, nrof_folds=args.lfw_nrof_folds)
 
             print()
             print('--- Verify using Euclidian distance ---')
             print('Accuracy: %1.3f+-%1.3f' % (np.mean(accuracy), np.std(accuracy)))
-            print('Accuracy array:', accuracy)
+            #print('Accuracy array:', accuracy)
             print('Best threshold: %1.3f' % bestThreshold)
             print('Minimal threshold of hit rate @ 100%%: %1.3f' % minThreshold)
             print('Maximum threshold of false alarm rate @ 0%%: %1.3f' % maxThreshold)
             print('Validation rate: %2.5f+-%2.5f @ FAR=%2.5f' % (val, val_std, far))
-
-            auc = metrics.auc(fpr, tpr)
-            plt.clf()
-            plt.plot(fpr, tpr, '.')
-            plt.savefig('euclidian_distance_auc.jpg')
+            print('Threshold @ %1.3f' % thresholdAtVal)
+            # auc = metrics.auc(fpr, tpr)
+            # plt.clf()
+            # plt.plot(fpr, tpr, '.')
+            # plt.savefig('euclidian_distance_auc.jpg')
             print('Area Under Curve (AUC): %1.3f' % auc)
             eer = brentq(lambda x: 1. - x - interpolate.interp1d(fpr, tpr)(x), 0., 1.)
             print('Equal Error Rate (EER): %1.3f' % eer)
 
-            tpr, fpr, accuracy, bestThreshold, minThreshold, maxThreshold, val, val_std, far = lfw.evaluate(emb_array,
+            tpr, fpr, accuracy, bestThreshold, minThreshold, maxThreshold, val, val_std, far, thresholdAtVal = lfw.evaluate(emb_array,
                 actual_issame, nrof_folds=args.lfw_nrof_folds, distance_metric=1)
 
             print()
             print("--- Verify using Cosine Similarity ---")
             print('Accuracy: %1.3f+-%1.3f' % (np.mean(accuracy), np.std(accuracy)))
-            print('Accuracy array:', accuracy)
+            #print('Accuracy array:', accuracy)
             print('Best threshold: %1.3f' % bestThreshold)
             print('Minimal threshold of hit rate @ 100%%: %1.3f' % minThreshold)
             print('Maximum threshold of false alarm rate @ 0%%: %1.3f' % maxThreshold)
             print('Validation rate: %2.5f+-%2.5f @ FAR=%2.5f' % (val, val_std, far))
-
-            auc = metrics.auc(fpr, tpr)
-            plt.clf()
-            plt.plot(fpr, tpr, '.')
-            plt.savefig('cosine_similarity_auc.jpg')
+            print('Threshold @ %1.3f' % thresholdAtVal)
+            # auc = metrics.auc(fpr, tpr)
+            # plt.clf()
+            # plt.plot(fpr, tpr, '.')
+            # plt.savefig('cosine_similarity_auc.jpg')
             print('Area Under Curve (AUC): %1.3f' % auc)
             eer = brentq(lambda x: 1. - x - interpolate.interp1d(fpr, tpr)(x), 0., 1.)
             print('Equal Error Rate (EER): %1.3f' % eer)
