@@ -277,6 +277,21 @@ def to_rgb(img):
     ret[:, :, 0] = ret[:, :, 1] = ret[:, :, 2] = img
     return ret
 
+def load_data2(image_paths, do_random_crop, do_random_flip, image_size):
+    nrof_samples = len(image_paths)
+    images = np.zeros((nrof_samples, image_size, image_size, 3))
+    for i in range(nrof_samples):
+        img = misc.imread(image_paths[i])
+        if img.ndim == 2:
+            img = to_rgb(img)
+        if img.ndim != 3:
+            print(image_paths[i], "img.ndim", img.ndim, "type", type(img))
+        img = crop(img, do_random_crop, image_size)
+        img = flip(img, do_random_flip)
+        img = (img.astype(np.float) - 127.5) / 128.0
+        images[i,:,:,:] = img
+    return images
+    
 def load_data(image_paths, do_random_crop, do_random_flip, image_size, do_prewhiten=True):
     nrof_samples = len(image_paths)
     images = np.zeros((nrof_samples, image_size, image_size, 3))
